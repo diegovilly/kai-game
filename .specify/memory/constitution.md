@@ -1,50 +1,54 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!-- 
+SYNC IMPACT REPORT
+Version change: 0.1.0 -> 1.0.0
+List of modified principles:
+  - [PRINCIPLE_1_NAME] -> I. Game Engine First (Phaser 3)
+  - [PRINCIPLE_2_NAME] -> II. Fluid Animation Discipline
+  - [PRINCIPLE_3_NAME] -> III. Componentized SoC (Separation of Concerns)
+  - [PRINCIPLE_4_NAME] -> IV. Vercel-Ready CI/CD
+  - [PRINCIPLE_5_NAME] -> V. Rule-Driven Board Logic
+Added sections: Technology Stack & Performance, Development Workflow
+Removed sections: None
+Templates requiring updates: 
+  ✅ updated: .specify/memory/constitution.md
+  ✅ validated: .specify/templates/plan-template.md (aligns)
+  ✅ validated: .specify/templates/spec-template.md (aligns)
+  ✅ validated: .specify/templates/tasks-template.md (aligns)
+Follow-up TODOs: None
+-->
+
+# Board Quest Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Game Engine First (Phaser 3)
+All game logic, rendering, and scene management MUST utilize Phaser 3. Use Phaser's built-in state management, camera system, and sprite handling as the primary source of truth for the game world. Rationale: Ensures optimal performance and leverages existing engine capabilities for "Game of the Goose" style mechanics.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Fluid Animation Discipline
+Character movement MUST be sequential (tile-by-tile) using Phaser Tweens. "Teleportation" between casillas is prohibited unless as a specific game mechanic (e.g., Bridge/Salto). Animations must remain synchronized with the spritesheet state (walking during movement, idle when stopped). Rationale: Core requirement for the "Board Quest" user experience.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Componentized SoC (Separation of Concerns)
+Maintain a strict separation between Phaser Game Objects (Player, GameScene), UI (Tailwind CSS), and Game Logic (DiceManager, BoardLogic). UI must communicate with the game core via structured events or singletons. Rationale: Facilitates "Vibe Coding" by keeping UI and Game Engine iterations decoupled.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Vercel-Ready CI/CD
+The project MUST remain deployable to Vercel at all times. Use Vite for development and production build handling. Any feature addition or refactor must pass `npm run build` checks before being committed to the main/feature branch. Rationale: Enables rapid feedback loops and stakeholder previews.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Rule-Driven Board Logic
+Board casillas must have explicit types (Normal, Trap, Power-up, jumping) defined in a central `BoardLogic` configuration. Rule effects MUST be evaluated and processed immediately after character movement animations conclude. Rationale: Ensures deterministic and testable game rules.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Technology Stack & Performance
+- **Core Engine**: Phaser 3 (latest stable)
+- **Build & Dev**: Vite (fast HMR)
+- **Styling**: Tailwind CSS (for menus and overlays)
+- **Hosting**: Vercel (GitHub integration)
+- **Performance Target**: Initial page load under 2 seconds.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
-
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Development Workflow
+- **Vibe Coding Steps**: Follow the roadmap in `docs/kaigame.md` for iterative milestones.
+- **Visual Verification**: Every UI or Game mechanic change must be verified in the browser before final task completion.
+- **Branching**: Use feature branches for non-trivial logic changes.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+This constitution supersedes all other informal practices. Amendments require a version bump and updates to this file. All PRs and tasks must be reviewed against these core principles to ensure compliance.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-04-24

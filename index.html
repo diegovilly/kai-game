@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Adventure Isle Board Game - v0.1 PoC</title>
+    <!-- Inline styles to prevent white flash (FOUC) during initial load -->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #0f172a; /* matches bg-slate-900 / dark theme */
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        color: white;
+        font-family: system-ui, -apple-system, sans-serif;
+        display: flex;
+      }
+      /* Prevent unstyled elements from showing before Tailwind loads */
+      .hidden { 
+        display: none !important; 
+      }
+      #character-selection, #victory-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(15, 23, 42, 0.9);
+      }
+      #ui-container {
+        width: 25%;
+        border-right: 4px solid #334155;
+      }
+      #game-container {
+        flex-grow: 1;
+        position: relative;
+      }
+    </style>
+  </head>
+  <body class="bg-game-bg flex m-0 p-0 w-screen h-screen overflow-hidden text-sm">
+    
+    <!-- DEV MODE Anti-FOUC Loader -->
+    <div id="initial-loader" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #0f172a; z-index: 99999; display: flex; justify-content: center; align-items: center; color: white;">
+      <h2 style="font-size: 2rem; animation: pulse 2s infinite;">Loading Assets...</h2>
+      <style>
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      </style>
+    </div>
+
+    <!-- Sidebar / Game Status UI -->
+    <div id="ui-container" class="w-1/4 h-full bg-slate-900 border-r-4 border-slate-700 text-white p-4 flex flex-col drop-shadow-2xl z-10 hidden">
+      <div class="bg-red-600 rounded-lg p-3 text-center mb-6 shadow-lg border-b-4 border-red-800">
+        <h1 class="text-xl font-black uppercase tracking-tighter text-white italic">Mushroom Kingdom</h1>
+      </div>
+
+      <div id="turn-indicator" class="bg-slate-800 rounded-lg p-4 mb-6 shadow border-2 border-yellow-500 hidden transition-all duration-300">
+        <h2 class="text-xs text-slate-400 uppercase tracking-widest mb-1">Current Player</h2>
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-xl bg-slate-700/50 border-2 border-slate-600 flex-shrink-0 overflow-hidden relative">
+            <div id="character-sprite-hud" class="absolute" style="background-image: url('/mario_characters.png'); background-size: 400% 100%; width: 100%; height: 100%; background-position: 0 0;"></div>
+          </div>
+          <div id="current-player-name" class="font-black text-2xl uppercase tracking-tight">Player</div>
+        </div>
+      </div>
+
+      <div class="flex-grow overflow-y-auto mb-6">
+        <div id="player-status-list" class="space-y-4">
+          <!-- Player statuses (including coins) will go here dynamically -->
+        </div>
+      </div>
+
+      <div class="mt-auto bg-slate-800 p-4 rounded-lg border border-slate-600 flex flex-col items-center">
+        <div id="dice-display" class="w-20 h-20 bg-white rounded-xl shadow-inner flex items-center justify-center text-5xl font-black text-slate-800 mb-4 transition-transform border-4 border-yellow-400">
+          ?
+        </div>
+        <button id="roll-dice-btn" class="w-full bg-gradient-to-b from-yellow-400 to-yellow-600 hover:from-yellow-300 hover:to-yellow-500 text-white font-black py-4 px-4 rounded-xl shadow-xl drop-shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all uppercase tracking-widest text-lg">
+          Hit Block!
+        </button>
+        <div class="mt-2 text-xs text-slate-400">Jump force: <span id="last-roll-val">-</span></div>
+      </div>
+    </div>
+
+    <!-- Phaser Canvas Container -->
+    <div id="game-container" class="flex-grow h-full relative">
+      <!-- Character Selection Overlay -->
+      <div id="character-selection" class="absolute inset-0 bg-slate-900/95 backdrop-blur-md flex justify-center items-center z-50">
+        <div class="bg-slate-800 text-white p-10 rounded-3xl shadow-2xl flex flex-col items-center max-w-3xl w-full border-4 border-red-600">
+          <div class="mb-4 animate-bounce">
+             <img src="/mario_items.png" style="width: 80px; height: 80px; object-fit: cover; object-position: 0 0; background-color: transparent;" />
+          </div>
+          <h2 class="text-5xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-b from-red-500 to-red-800 uppercase italic tracking-tighter">Mario Board Quest</h2>
+          <p class="text-slate-400 mb-8 font-bold">Assemble your team of heroes!</p>
+          
+          <div class="grid grid-cols-2 gap-4 w-full mb-8">
+            <label class="flex items-center p-5 bg-red-900/20 rounded-2xl cursor-pointer hover:bg-red-800/40 transition-all border-4 border-transparent hover:border-red-500 group">
+              <input type="checkbox" class="player-checkbox form-checkbox h-8 w-8 text-red-600 rounded-lg border-2 border-red-500" value="mario" checked>
+              <div class="ml-4">
+                <span class="block font-black text-xl uppercase tracking-tighter group-hover:scale-110 transition-transform">Mario</span>
+                <span class="text-xs text-red-400 font-bold uppercase">The Super Plumber</span>
+              </div>
+            </label>
+            <label class="flex items-center p-5 bg-green-900/20 rounded-2xl cursor-pointer hover:bg-green-800/40 transition-all border-4 border-transparent hover:border-green-500 group">
+              <input type="checkbox" class="player-checkbox form-checkbox h-8 w-8 text-green-600 rounded-lg border-2 border-green-500" value="luigi" checked>
+              <div class="ml-4">
+                <span class="block font-black text-xl uppercase tracking-tighter group-hover:scale-110 transition-transform">Luigi</span>
+                <span class="text-xs text-green-400 font-bold uppercase">The Tall Brother</span>
+              </div>
+            </label>
+            <label class="flex items-center p-5 bg-pink-900/20 rounded-2xl cursor-pointer hover:bg-pink-800/40 transition-all border-4 border-transparent hover:border-pink-500 group">
+              <input type="checkbox" class="player-checkbox form-checkbox h-8 w-8 text-pink-600 rounded-lg border-2 border-pink-500" value="peach">
+              <div class="ml-4">
+                <span class="block font-black text-xl uppercase tracking-tighter group-hover:scale-110 transition-transform">Peach</span>
+                <span class="text-xs text-pink-400 font-bold uppercase">The Princess</span>
+              </div>
+            </label>
+            <label class="flex items-center p-5 bg-emerald-900/20 rounded-2xl cursor-pointer hover:bg-emerald-800/40 transition-all border-4 border-transparent hover:border-emerald-500 group">
+              <input type="checkbox" class="player-checkbox form-checkbox h-8 w-8 text-emerald-600 rounded-lg border-2 border-emerald-500" value="yoshi">
+              <div class="ml-4">
+                <span class="block font-black text-xl uppercase tracking-tighter group-hover:scale-110 transition-transform">Yoshi</span>
+                <span class="text-xs text-emerald-400 font-bold uppercase">The Green Dinosaur</span>
+              </div>
+            </label>
+          </div>
+          <div id="selection-error" class="text-red-500 font-black uppercase text-sm mb-4 h-5"></div>
+          <button id="start-game-btn" class="bg-red-600 hover:bg-red-500 text-white font-black py-4 px-16 rounded-full shadow-2xl transform hover:scale-110 transition-all text-2xl uppercase tracking-tighter border-b-8 border-red-800 active:border-b-0 active:translate-y-2">
+            Let's-a Go!
+          </button>
+        </div>
+      </div>
+
+      <!-- Rival Selection Overlay -->
+      <div id="rival-selection" class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm flex justify-center items-center z-40 hidden">
+        <div class="bg-slate-800 text-white p-8 rounded-3xl shadow-2xl flex flex-col items-center max-w-lg w-full border-4 border-orange-500">
+          <h2 id="rival-title" class="text-3xl font-black mb-2 uppercase italic tracking-tighter text-orange-400">Power-up!</h2>
+          <p id="rival-desc" class="text-slate-300 mb-6 font-bold text-center">Choose a rival to target:</p>
+          <div id="rival-list" class="grid grid-cols-1 gap-3 w-full mb-6">
+            <!-- Rival buttons will be injected here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Coin Redemption Overlay -->
+      <div id="coin-redemption" class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm flex justify-center items-center z-40 hidden">
+        <div class="bg-slate-800 text-white p-8 rounded-3xl shadow-2xl flex flex-col items-center max-w-lg w-full border-4 border-yellow-500">
+          <div class="mb-4 text-4xl">💰</div>
+          <h2 class="text-3xl font-black mb-2 uppercase italic tracking-tighter text-yellow-400">Protect?</h2>
+          <p class="text-slate-300 mb-6 font-bold text-center text-lg">Spend <span class="text-yellow-400 font-black">5 Coins</span> to block this attack?</p>
+          <div class="flex gap-4 w-full">
+            <button id="redeem-yes" class="flex-grow bg-green-600 hover:bg-green-500 text-white font-black py-3 rounded-xl shadow-lg transition-all uppercase tracking-wider">Yes, block!</button>
+            <button id="redeem-no" class="flex-grow bg-red-600 hover:bg-red-500 text-white font-black py-3 rounded-xl shadow-lg transition-all uppercase tracking-wider">No, take hit</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Victory Overlay -->
+      <div id="victory-overlay" class="absolute inset-0 bg-slate-900/95 backdrop-blur-lg flex justify-center items-center z-50 hidden">
+        <div class="bg-slate-800 text-white p-12 rounded-3xl shadow-2xl flex flex-col items-center max-w-xl w-full border-8 border-yellow-400">
+          <h2 class="text-7xl font-black mb-6 text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 animate-bounce tracking-tighter italic uppercase">Super Win!</h2>
+          <p id="winner-text" class="text-3xl font-black mb-10 text-center uppercase tracking-tight"></p>
+          <button id="restart-game-btn" class="bg-red-600 hover:bg-red-500 text-white font-black py-5 px-16 rounded-full shadow-2xl transform hover:scale-110 transition-all text-2xl uppercase tracking-tighter border-b-8 border-red-800">
+            Course Clear!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
+
